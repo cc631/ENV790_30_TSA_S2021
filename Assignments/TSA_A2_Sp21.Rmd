@@ -1,8 +1,10 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2021"
-subtitle: "Assignment 2 - Due date 02/05/21"
-author: "Student Name"
-output: pdf_document
+author: "Chuqi(Aria) Cai"
+subtitle: Assignment 2 - Due date 02/05/21
+output:
+  pdf_document: default
+  word_document: default
 geometry: margin=2.54cm
 ---
 
@@ -19,9 +21,18 @@ When you have completed the assignment, **Knit** the text and code into a single
 
 R packages needed for this assignment:"forecast","tseries", and "dplyr". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
 
-```{r}
+```{r setup & package, include=FALSE}
 #Load/install required package here
+knitr::opts_chunk$set(echo = TRUE) 
+```
 
+```{r}
+library(lubridate)
+library(readxl)
+library(forecast)
+library(tseries)
+library(dplyr)
+library(ggplot2)
 ```
 
 
@@ -29,30 +40,105 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 
 Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our **Data** folder. The data comes from the US Energy Information and Administration and corresponds to the January 2021 Monthly Energy Review. The spreadsheet is ready to be used. Use the command $read.table()$ to import the data in R or $panda.read\_excel()$ in Python (note that you will need to import pandas package). }
 
-```{r}
+```{r import dataset}
 #Importing data set
-
+raw_data <- read_excel("/Users/cai/Documents/R/ENV790_TSA_S21/Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip=10)
 ```
 
 
 ## Question 1
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
+```{r specific columns}
+spec_data <- raw_data[,4:6]
+head(spec_data)
+```
 
 ## Question 2
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
+```{r transform ts}
+my_date <- raw_data[,1]
+head(my_date)
+spec_data <- cbind(my_date, spec_data)
+colnames(spec_data)=c("Date", "TBEP", "TREP","HPC")
+spec_data <- spec_data[-c(1),]
+cols.num <- c("TBEP","TREP","HPC")
+spec_data[cols.num] <- sapply(spec_data[cols.num],as.numeric)
+head(spec_data)
+
+ts_data <- ts(spec_data[,2:4],start = 1,frequency = 1)
+
+findfrequency(ts_data)
+```
+
 
 ## Question 3
 Compute mean and standard deviation for these three series.
+```{r}
+#Total Biomass Energy Production
+#Mean
+mean(ts_data[,1])
+#Standard Deviation
+sd(ts_data[,1])
+#Total Renewable Energy Production
+#Mean
+mean(ts_data[,2])
+#Standard Deviation
+sd(ts_data[,2])
+#Hydroelectric Power Consumption
+#Mean
+mean(ts_data[,3])
+#Standard Deviation
+sd(ts_data[,3])
+```
 
 ## Question 4
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
+Time series plot:
+```{r}
+ggplot(spec_data, aes(x=spec_data[,1], y = 1000)) +
+            geom_line(aes(y=TBEP,col="TBEP")) +
+            geom_line(aes(y=TREP,col="TREP")) +
+            geom_line(aes(y=HPC,col="HPC")) +  
+            geom_hline(yintercept=mean(ts_data[,1]),col="Green")+
+            geom_hline(yintercept=mean(ts_data[,2]),col="Blue")+
+            geom_hline(yintercept=mean(ts_data[,3]),col="Red")+
+            xlab("Time") +
+            ylab("Trillion Btu")+
+            labs(color="Types")
+```
+
+
 ## Question 5
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
 
+```{r}
+#Correlation between Total Biomass Energy Production and Total Renewable Energy Production
+cor(ts_data[,1],ts_data[,2])
+#Correlation between Hydroelectric Power Consumption and Total Renewable Energy Production
+cor(ts_data[,2],ts_data[,3])
+#Correlation between Total Biomass Energy Production and Hydroelectric Power Consumption
+cor(ts_data[,1],ts_data[,3])
+```
+The correlation coefficient 0.92 shows that the Total Biomass Energy Production and the Total Renewable Energy Production are strongly correlated, and they are strong positive correlation. And the correlation coefficient -0.256 shows that the Total Biomass Energy Production adn Hydroelectric Power Consumption are weak correlated, the relationship is weak negative correlation. And the -0.003 between Hydroelectric Power Consumption and Total Renewable Energy Production shows that they are not correlated.
+
 ## Question 6
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
+```{r}
+acf(ts_data[,1], lag.max = 40)
+acf(ts_data[,2], lag.max = 40)
+acf(ts_data[,3], lag.max = 40)
+
+```
+The Total Biomass Energy Production and the Total Renewable Energy Production have constantly significant positive correlation, and the correlation decrease as the lag increase. And the Hydroelectric power consumption is different pattern, it has a large spike at lag 1 that decreases after a few lags.
+
 
 ## Question 7
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
+```{r}
+pacf(ts_data[,1], lag.max = 40)
+pacf(ts_data[,2], lag.max = 40)
+pacf(ts_data[,3], lag.max = 40)
+```
 
+Different from the ones in Q6, these three plot have similar patterns, and after the first large spike,the following correlations are not significant. 

@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 It's useful to designate one code chunk to load packages on the beginning of the file. You can always add to this chunk as needed. But concentrate the packages needed on only one chunk.
 
 ```{r package, include=FALSE}
+install.packages("lubridate")
 library(lubridate)
 library(ggplot2)
 
@@ -35,7 +36,7 @@ For this first example we will import water inflow data for reservoirs in Brazil
 ```{r}
 #Importing time series data from text file
 #I am calling it raw for now because it's data as it is in the file
-raw_inflow_data <- read.table(file="/Users/lmm89/Desktop/ENV790_30_TSA_S2021/Data/inflowtimeseries.txt",header=FALSE,skip=0)
+raw_inflow_data <- read.table(file="/Users/cai/Documents/R/ENV790_TSA_S21/Data/inflowtimeseries.txt",header=FALSE,skip=0)
 
 #If you want specific columns just trim the table
 raw_inflow_data <- raw_inflow_data[,1:5] #the space before the comma means you want all rows
