@@ -39,7 +39,7 @@ For this first example we will import water inflow data for reservoirs in Brazil
 ```{r}
 #Importing time series data from text file
 #I am calling it raw for now because it's data as it is in the file
-raw_inflow_data <- read.table(file="/Users/lmm89/Desktop/ENV790_30_TSA_S2021/Data/inflowtimeseries.txt",header=FALSE,skip=0)
+raw_inflow_data <- read.table(file="../Data/inflowtimeseries.txt",header=FALSE,skip=0)
 
 #Show alternative way of doing it with relative path
 #raw_inflow_data <- read.table(file="../Data/inflowtimeseries.txt",header=FALSE,skip=0)
@@ -138,7 +138,7 @@ Many of the functions we will use require a time series object. You can transfor
 
 ```{r}
 ts_inflow_data <- ts(inflow_data[,2:(2+nhydro-1)]) #note that we are only transforming columns with inflow data, not the date columns
-ts_inflow_data
+#ts_inflow_data
 ```
 
 Note that ts_inflow_data has information on start, end and frequency. We will discuss frequency in future lectures, for now let's just keep the default value for frequency which is 1.

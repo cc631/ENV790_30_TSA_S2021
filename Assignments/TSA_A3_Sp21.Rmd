@@ -29,25 +29,133 @@ R packages needed for this assignment:"forecast","tseries", and "Kendall". Insta
 
 ```{r}
 #Load/install required package here
+library(lubridate)
+library(readxl)
+library(forecast)
+library(tseries)
+library(dplyr)
+library(ggplot2)
+library(Kendall)
 
 ```
 
 ##Trend Component
 
+```{r}
+#Importing data set
+raw_data <- read_excel("../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip=10)
+
+spec_data <- raw_data[,4:6]
+head(spec_data)
+
+my_date <- raw_data[,1]
+head(my_date)
+spec_data <- cbind(my_date, spec_data)
+colnames(spec_data)=c("Date", "TBEP", "TREP","HPC")
+spec_data <- spec_data[-c(1),]
+cols.num <- c("TBEP","TREP","HPC")
+spec_data[cols.num] <- sapply(spec_data[cols.num],as.numeric)
+head(spec_data)
+nobs <- nrow(spec_data)
+
+ts_data <- ts(spec_data[,2:4],frequency = 12)
+head(ts_data,15)
+```
+
+
 ### Q1
 Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: watch videos for M4)
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Acf(ts_data[,1],lag.max=40,main=paste("TBEP"))
+Acf(ts_data[,2],lag.max=40,main=paste("TREP"))
+Acf(ts_data[,3],lag.max=40,main=paste("HPC"))
+```
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Pacf(ts_data[,1],lag.max=40,main=paste("TBEP"))
+Pacf(ts_data[,2],lag.max=40,main=paste("TREP"))
+Pacf(ts_data[,3],lag.max=40,main=paste("HPC"))
+```
+
 
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
- 
+```{r}
+t <- c(1:nobs)
+#TBEP
+i=1
+linear_trend_model_TBEP=lm(spec_data[,i+1]~t)
+summary(linear_trend_model_TBEP)
+```
+
+```{r}
+#TREP
+i=2
+linear_trend_model_TREP=lm(spec_data[,i+1]~t)
+summary(linear_trend_model_TREP)
+```
+```{r}
+#HPC
+i=3
+linear_trend_model_HPC=lm(spec_data[,i+1]~t)
+summary(linear_trend_model_HPC)
+``` 
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and  compare with the plots from Q1. What happened? Did anything change?
+```{r}
+i = 1
+beta0=as.numeric(linear_trend_model_TBEP$coefficients[1])  #first coefficient is the intercept term or beta0
+beta1=as.numeric(linear_trend_model_TBEP$coefficients[2])  #second coefficient is the slope or beta1
+detrend_data_TBEP<- spec_data[,(i+1)]-(beta0+beta1*t)
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
+            xlab("Year")+
+            geom_abline(intercept = beta0, slope = beta1, color="red")+
+            geom_smooth(color="red",method="lm") 
+```
+```{r}
+i = 2
+beta0=as.numeric(linear_trend_model_TREP$coefficients[1])  #first coefficient is the intercept term or beta0
+beta1=as.numeric(linear_trend_model_TREP$coefficients[2])  #second coefficient is the slope or beta1
+
+detrend_data_TREP<- spec_data[,(i+1)]-(beta0+beta1*t)
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
+            xlab("Year")+
+            geom_abline(intercept = beta0, slope = beta1, color="red")+
+            geom_smooth(color="red",method="lm") 
+```
+
+```{r}
+i = 3
+beta0=as.numeric(linear_trend_model_HPC$coefficients[1])  #first coefficient is the intercept term or beta0
+beta1=as.numeric(linear_trend_model_HPC$coefficients[2])  #second coefficient is the slope or beta1
+
+detrend_data_HPC<- spec_data[,(i+1)]-(beta0+beta1*t)
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
+            xlab("Year")+
+            geom_abline(intercept = beta0, slope = beta1, color="red")+
+            geom_smooth(color="red",method="lm") 
+```
+
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
+```{r}
+
+```
+
 
 ## Seasonal Component
 
