@@ -1,7 +1,7 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2021"
-subtitle: "Assignment 3 - Due date 02/12/21"
-author: "Student Name"
+subtitle: "Assignment 3 - Due date 02/15/21"
+author: "Aria Cai"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -67,20 +67,29 @@ head(ts_data,15)
 Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: watch videos for M4)
 ```{r}
 par(mfrow=c(1,3)) #place plot side by side
+plot(spec_data[,"TBEP"],type="l",col="blue",ylab="Total Amount") 
 Acf(ts_data[,1],lag.max=40,main=paste("TBEP"))
-Acf(ts_data[,2],lag.max=40,main=paste("TREP"))
-Acf(ts_data[,3],lag.max=40,main=paste("HPC"))
+Pacf(ts_data[,1],lag.max=40,main=paste("TBEP"))
 ```
 ```{r}
 par(mfrow=c(1,3)) #place plot side by side
-Pacf(ts_data[,1],lag.max=40,main=paste("TBEP"))
+plot(spec_data[,"TREP"],type="l",col="blue",ylab="Total Amount") 
+Acf(ts_data[,2],lag.max=40,main=paste("TREP"))
 Pacf(ts_data[,2],lag.max=40,main=paste("TREP"))
+```
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+plot(spec_data[,"HPC"],type="l",col="blue",ylab="Total Amount") 
+Acf(ts_data[,3],lag.max=40,main=paste("HPC"))
 Pacf(ts_data[,3],lag.max=40,main=paste("HPC"))
 ```
 
 
+
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
+
+According to the ACF plot, it seems that the hydroelectric power consumption is correlated to seasonality. And the total biomass energy and total renewable energy production shows a high coefficient at lag1 and continue decreasing as the lag increase. it shows these two series have linear trends and it's not correalted to seasonality.
 
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
@@ -106,6 +115,9 @@ summary(linear_trend_model_HPC)
 ``` 
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and  compare with the plots from Q1. What happened? Did anything change?
+
+For the total biomass energy production and total renewable energy production, the detrended series does not shows the strong positive increase with time. And it also does not show correlation with seasonality. The total amount of these two production is negative during 2000-2010, and the rest of them are positive. For hydroelectric power consumption, there are smaller changes because the original trend is negative with a small slope.
+
 ```{r}
 i = 1
 beta0=as.numeric(linear_trend_model_TBEP$coefficients[1])  #first coefficient is the intercept term or beta0
@@ -117,7 +129,9 @@ ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
             ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
             xlab("Year")+
             geom_abline(intercept = beta0, slope = beta1, color="red")+
-            geom_smooth(color="red",method="lm") 
+            geom_smooth(color="red",method="lm")+ 
+            geom_line(aes(y=detrend_data_TBEP), col="green")+
+            geom_smooth(aes(y=detrend_data_TBEP),color="orange",method="lm")
 ```
 ```{r}
 i = 2
@@ -131,7 +145,9 @@ ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
             ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
             xlab("Year")+
             geom_abline(intercept = beta0, slope = beta1, color="red")+
-            geom_smooth(color="red",method="lm") 
+            geom_smooth(color="red",method="lm")+ 
+            geom_line(aes(y=detrend_data_TREP), col="green")+
+            geom_smooth(aes(y=detrend_data_TREP),color="orange",method="lm") 
 ```
 
 ```{r}
@@ -146,14 +162,32 @@ ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
             ylab(paste0("Total Amount ",colnames(spec_data)[(1+i)],sep="")) +
             xlab("Year")+
             geom_abline(intercept = beta0, slope = beta1, color="red")+
-            geom_smooth(color="red",method="lm") 
+            geom_smooth(color="red",method="lm")+
+            geom_line(aes(y=detrend_data_HPC), col="green")+
+            geom_smooth(aes(y=detrend_data_HPC),color="orange",method="lm")
 ```
 
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
-```{r}
+Yes, the ACF has larger change than the PACF plots. The ACF plots shows higher seasonality in the correlation. However, the shape and amplitude of the PACF plot does not change a lot.
 
+```{r}
+ts_TBEP <- ts(data = detrend_data_TBEP, frequency = 12)
+ts_TREP <- ts(data = detrend_data_TREP, frequency = 12)
+ts_HPC <- ts(data = detrend_data_HPC, frequency = 12)
+```
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Acf(ts_TBEP,lag.max=40,main=paste("TBEP"))
+Acf(ts_TREP,lag.max=40,main=paste("TREP"))
+Acf(ts_HPC,lag.max=40,main=paste("HPC"))
+```
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Pacf(ts_TBEP,lag.max=40,main=paste("TBEP"))
+Pacf(ts_TREP,lag.max=40,main=paste("TREP"))
+Pacf(ts_HPC,lag.max=40,main=paste("HPC"))
 ```
 
 
@@ -163,11 +197,108 @@ Set aside the detrended series and consider the original series again from Q1 to
 
 ### Q6
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
+```{r}
+i = 1
+dummies_TBEP <- seasonaldummy(ts_data[,i])
+seas_means_model_TBEP=lm(spec_data[,(i+1)]~dummies_TBEP)
+summary(seas_means_model_TBEP)
+beta_int_TBEP=seas_means_model_TBEP$coefficients[1]
+beta_coeff_TBEP=seas_means_model_TBEP$coefficients[2:12]
+```
+
+```{r}
+i = 2
+dummies_TREP <- seasonaldummy(ts_data[,i])
+seas_means_model_TREP=lm(spec_data[,(i+1)]~dummies_TREP)
+summary(seas_means_model_TREP)
+beta_int_TREP=seas_means_model_TREP$coefficients[1]
+beta_coeff_TREP=seas_means_model_TREP$coefficients[2:12]
+```
+
+
+```{r}
+i = 3
+dummies_HPC <- seasonaldummy(ts_data[,i])
+seas_means_model_HPC=lm(spec_data[,(i+1)]~dummies_HPC)
+summary(seas_means_model_HPC)
+beta_int_HPC=seas_means_model_HPC$coefficients[1]
+beta_coeff_HPC=seas_means_model_HPC$coefficients[2:12]
+```
+
 
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
+Nothing has been changed for total biomass energy production and total renewable energy production. But the trends for hydroelectric power consumption is more clear, and the change between the neigboring data is smaller.
+
+```{r}
+i=1
+seas_comp_TBEP=array(0,nobs)
+for(n in 1:nobs){
+  seas_comp_TBEP[n]=(beta_int_TBEP+beta_coeff_TBEP%*%dummies_TBEP[n,])
+}
+deseason_data_TBEP <- spec_data[,(1+i)]-seas_comp_TBEP
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            xlab("Year")+
+            ylab(paste0("Total Amount of ",colnames(spec_data)[(1+i)],sep="")) +
+            geom_line(aes(y=deseason_data_TBEP), col="red")
+```
+
+```{r}
+i=2
+seas_comp_TREP=array(0,nobs)
+for(n in 1:nobs){
+  seas_comp_TREP[n]=(beta_int_TREP+beta_coeff_TREP%*%dummies_TREP[n,])
+}
+deseason_data_TREP <- spec_data[,(1+i)]-seas_comp_TREP
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            xlab("Year")+
+            ylab(paste0("Total Amount of ",colnames(spec_data)[(1+i)],sep="")) +
+            geom_line(aes(y=deseason_data_TREP), col="red")
+```
+
+
+```{r}
+i=3
+seas_comp_HPC=array(0,nobs)
+for(n in 1:nobs){
+  seas_comp_HPC[n]=(beta_int_HPC+beta_coeff_HPC%*%dummies_HPC[n,])
+}
+deseason_data_HPC <- spec_data[,(1+i)]-seas_comp_HPC
+
+ggplot(spec_data, aes(x=spec_data[,1], y=spec_data[,(1+i)])) +
+            geom_line(color="blue") +
+            xlab("Year")+
+            ylab(paste0("Total Amount of ",colnames(spec_data)[(1+i)],sep="")) +
+            geom_line(aes(y=deseason_data_HPC), col="red")
+```
+
 
 ### Q8
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
 
+The PACF plots has smaller change than the change in ACF. For Acf plots, the plots for total biomass and renewable energy production does not change. But the ACF plots for Hydroelectric power consumption changes a lot. After deseasoning, the ACF shows that the HPC data has clear decreasing trends over time. 
 
+```{r}
+ts_TBEP_sea <- ts(data = deseason_data_TBEP, frequency = 12)
+ts_TREP_sea <- ts(data = deseason_data_TREP, frequency = 12)
+ts_HPC_sea <- ts(data = deseason_data_HPC, frequency = 12)
+```
+
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Acf(ts_TBEP_sea,lag.max=40,main=paste("TBEP"))
+Acf(ts_TREP_sea,lag.max=40,main=paste("TREP"))
+Acf(ts_HPC_sea,lag.max=40,main=paste("HPC"))
+```
+
+
+```{r}
+par(mfrow=c(1,3)) #place plot side by side
+Pacf(ts_TBEP_sea,lag.max=40,main=paste("TBEP"))
+Pacf(ts_TREP_sea,lag.max=40,main=paste("TREP"))
+Pacf(ts_HPC_sea,lag.max=40,main=paste("HPC"))
+```
